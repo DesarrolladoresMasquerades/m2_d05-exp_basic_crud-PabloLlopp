@@ -8,16 +8,51 @@ const router = express.Router();
 const Book = require("../models/Book.model");
 
 // ****************************************************************************************
-// GET route to display all the books
+// GET route for updating a specific book from the database
 // ****************************************************************************************
 
-// this corresponds to the app.get()
-router.get("/books", (req, res) => {
-  Book.find().then((books) => {
-    console.log(`Found ${books.length} books form the DB`);
-    res.render("books-list", { books });
-  });
+router.route('/books/:id/edit')
+.get((req,res)=>{
+  const id = req.params.id;
+  Book.findById(id)
+  .then((book)=>{
+    res.render('book-edit', book)
+})
+})
+.post((req,res)=>{
+  const id = req.params.id;
+
+  const title = req.body.title;
+  const description = req.body.description;
+  const author = req.body.author;
+  const rating = req.body.rating;
+
+  Book.findByIdAndUpdate(
+    id,
+    {title, description, author, rating},
+    {new: true}
+  )
+  .then(res.redirect(`/books/${id}`))
 });
+
+// ****************************************************************************************
+// GET route for creating a new book from the database
+// ****************************************************************************************
+
+router.route('/books/create')
+.get((req, res)=>{
+  res.render("book-create");
+})
+.post((req, res)=>{
+  const title = req.body.title;
+  const description = req.body.description;
+  const author = req.body.author;
+  const rating = req.body.rating;
+  
+  Book.create({ title, author, description, rating})
+  .then(()=> res.redirect("/books"))
+  .catch((error)=>`Error while creating a new book: ${error}`)
+})
 
 // ****************************************************************************************
 // GET route for querying a specific book from the database
@@ -33,9 +68,15 @@ router.get("/books/:id", (req,res)=>{
 })
 
 // ****************************************************************************************
-// GET route for updating a specific book from the database
+// GET route to display all the books
 // ****************************************************************************************
 
-router.route('')
+// this corresponds to the app.get()
+router.get("/books", (req, res) => {
+  Book.find().then((books) => {
+    console.log(`Found ${books.length} books form the DB`);
+    res.render("books-list", { books });
+  });
+});
 
 module.exports = router;
